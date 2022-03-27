@@ -2,77 +2,60 @@ import java.util.*;
 
 public class Algorithm {
 
-    private final Map<String, ArrayList<Vector>> train;
-    private Map<String, Integer> counter;
-    private final int k;
+    private final ArrayList<Line> train;
+    private final ArrayList<Line> test;
 
-    public Algorithm(Map<String, ArrayList<Vector>> train, int k) {
+    public Algorithm(ArrayList<Line> train, ArrayList<Line> test) {
         this.train = train;
-        this.k = k;
+        this.test = test;
     }
 
-    public void doAlgorithm(Vector toDetermine, int theta) {
-//        Map<String, ArrayList<Double>> distances = new LinkedHashMap<>();
-//
-//        train.forEach((key, vectorList) -> {
-//            if (!distances.containsKey(key))
-//                distances.put(key, new ArrayList<>());
-//
-//            for (Vector vector : vectorList) {
-//                distances.get(key).add(vector.euclideanDistance(toDetermine));
-//            }
-//        });
-//
-//        distances.forEach((key, value) -> Collections.sort(value));
-//
-//        counter = new HashMap<>();
-//
-//        for (int i = 0; i < k; i++) {
-//            double min = Double.MAX_VALUE;
-//            String type = "";
-//
-//            for (Map.Entry<String, ArrayList<Double>> entry : distances.entrySet()) {
-//                double minType = entry.getValue().get(0);
-//
-//                if (min > minType) {
-//                    min = minType;
-//                    type = entry.getKey();
-//                }
-//            }
-//            distances.get(type).remove(0);
-//
-//            if (!counter.containsKey(type))
-//                counter.put(type, 0);
-//
-//            int count = counter.get(type);
-//            counter.put(type, count + 1);
-//        }
-        Map<String, ArrayList<Double>> outputs = new LinkedHashMap<>();
+    public void doAlgorithm(Perceptron perceptron) {
 
-        train.forEach((key, vectorList) -> {
-            if (!outputs.containsKey(key))
-                outputs.put(key, new ArrayList<>());
+        for(int i = 0; i < 10; i++) {
+            shuffleArray(train);
+            train.forEach(line -> {
+                perceptron.learn(line.getVector(), line.getType());
+            });
+        }
+    }
 
-            for (Vector vector : vectorList) {
-                outputs.get(key).add(vector.getOutputValue(toDetermine, theta));
+    public void checkAlgorithm(Perceptron perceptron) {
+
+        int counter = 0;
+        int sum = 0;
+
+        shuffleArray(test);
+        for(Line line : test) {
+            Vector vector = line.getVector();
+            Vector copy = new Vector(vector.getPoints());
+
+
+            Type type = perceptron.getType(vector);
+
+            if(type.getName().equals(line.getType())) {
+                counter++;
             }
-        });
+            System.out.println(copy + " : " + type);
+        }
+
+        sum += test.size();
+
+
+        double accuracy = (double)counter * 100 / sum;
+
+        System.out.println("ACCURACY: " + accuracy + '%');
     }
 
-    public String getType() {
-
-        Optional<Map.Entry<String, Integer>> entry = counter.entrySet().stream().max(((o1, o2) -> {
-            if (o1.getValue().compareTo(o2.getValue()) == 0) {
-                return (int) (Math.random() * 2) == 1 ? -1 : 1;
-            } else
-                return o1.getValue().compareTo(o2.getValue());
-        }));
-
-
-        if (entry.isPresent())
-            return entry.get().getKey();
-        else
-            throw new NoSuchElementException("Couldn't define max entry");
-
+    public void shuffleArray(ArrayList<Line> ar)
+    {
+        Random rnd = new Random();
+        for (int i = ar.size() - 1; i > 0; i--)
+        {
+            int index = rnd.nextInt(i + 1);
+            Line a = ar.get(index);
+            ar.set(index, ar.get(i));
+            ar.set(i, a);
+        }
     }
 }

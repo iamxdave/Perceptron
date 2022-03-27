@@ -7,11 +7,28 @@ public class FileLoader {
 
     private static int lineSize;
 
+    private static Set<String> names;
+
     public static int getLineSize() {
         return lineSize;
     }
 
-    public Map<String, ArrayList<Vector>> loadFile(String path) throws FileNotFoundException {
+    public static ArrayList<Type> getTypes() {
+        ArrayList<Type> types = new ArrayList<>();
+
+        int counter = 0;
+        for(String name : names)
+            types.add(new Type(name, counter++));
+
+        return types;
+    }
+
+    public FileLoader() {
+        lineSize = 0;
+        names = new LinkedHashSet<>();
+    }
+
+    public ArrayList<Line> loadFile(String path) throws FileNotFoundException {
 
         File fileToLoad;
         if(Files.exists(Path.of(path)))
@@ -19,10 +36,11 @@ public class FileLoader {
         else
             throw new FileNotFoundException("Could not find a file");
 
-        Map<String, ArrayList<Vector>> vectors = new LinkedHashMap<>();
+        ArrayList<Line> vectors = new ArrayList<>();
 
         String line;
         String[] parts;
+
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileToLoad)));
             while((line = br.readLine()) != null) {
@@ -33,19 +51,20 @@ public class FileLoader {
                 Vector vector = new Vector(points);
                 String type = parts[parts.length - 1];
 
-                if(!vectors.containsKey(type))
-                    vectors.put(type, new ArrayList<>() {
-                    });
+                vectors.add(new Line(vector, type));
 
-                vectors.get(type).add(vector);
+                if(names.size() != 2) {
+                    names.add(type);
+                }
 
-                lineSize = parts.length;
+                if(lineSize == 0)
+                    lineSize = parts.length;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-
         return vectors;
     }
+
 }

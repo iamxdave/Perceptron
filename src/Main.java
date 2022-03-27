@@ -1,49 +1,43 @@
-import java.io.Console;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Main {
     public static void main(String[] args) {
 
         try {
-            if (args.length != 3)
+            if (args.length != 2)
                 throw new ArrayIndexOutOfBoundsException("Invalid args size");
 
             FileLoader fl = new FileLoader();
-            Map<String, ArrayList<Vector>> train = fl.loadFile(args[0]);
-            Map<String, ArrayList<Vector>> test = fl.loadFile(args[1]);
+            ArrayList<Line> train = fl.loadFile(args[0]);
+            ArrayList<Line> test = fl.loadFile(args[1]);
 
-            int k = Integer.parseInt(args[2]);
+            double threshold = Math.random() * 10 - 5;
 
-            if (k < 1)
-                throw new IllegalArgumentException("K needs to be positive natural number");
+            ArrayList<Type> types = FileLoader.getTypes();
+            System.out.println(types);
 
-            Algorithm algorithm = new Algorithm(train, Integer.parseInt(args[2]));
+            if (types.size() != 2)
+                throw new ArrayIndexOutOfBoundsException("There needs to be only two classes");
 
-            int counter = 0;
-            int sum = 0;
+            double bias = 0.5;
 
-            for(Map.Entry<String, ArrayList<Vector>> entry : test.entrySet()) {
-                for(Vector vector : entry.getValue()) {
-                    algorithm.doAlgorithm(vector);
-                    String vectorType = algorithm.getType();
+            Perceptron perceptron = new Perceptron(threshold, bias, types);
 
-                    System.out.println(vector + " : " + vectorType);
+            perceptron.setWeights(FileLoader.getLineSize() - 1);
 
-                    if(entry.getKey().equals(vectorType)) {
-                        counter++;
-                    }
-                }
-                sum += entry.getValue().size();
-            }
+            Algorithm algorithm = new Algorithm(train, test);
 
-            double accuracy = (double)counter * 100 / sum;
+            algorithm.doAlgorithm(perceptron);
 
-            System.out.println("ACCURACY: " + accuracy + '%');
+            algorithm.checkAlgorithm(perceptron);
 
 
-            //Console console = new Console(train);
+            System.out.println("bias: " + bias);
+            Console console = new Console(perceptron);
 
             while(true) {
                 console.run();
